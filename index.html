@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EL Contractor Audit</title>
+    
+    <!-- Tailwind CSS for high-end styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- PapaParse for parsing high-performance CSV streams -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+    <!-- SheetJS for advanced compiled multi-sheet Excel generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- Google Fonts (Cairo) for premium typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f8fafc;
+            background-image: radial-gradient(#e2e8f0 1.2px, transparent 1.2px);
+            background-size: 28px 28px;
+        }
+        
+        /* Modern Premium Scrollbar */
+        ::-webkit-scrollbar {
+            width: 7px;
+            height: 7px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 99px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        /* Seamless Accordion transition animation */
+        .accordion-content {
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        .accordion-content.open {
+            max-height: 3000px;
+            opacity: 1;
+        }
+
+        /* Premium printing definitions */
+        @media print {
+            body {
+                background-color: white !important;
+                background-image: none !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-card {
+                border: 1px solid #cbd5e1 !important;
+                box-shadow: none !important;
+                border-radius: 12px !important;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col antialiased">
+
+    <!-- Global Sticky Header -->
+    <header class="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white shadow-xl sticky top-0 z-50 no-print border-b border-blue-900/40">
+        <div class="container mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3.5">
+                <div class="bg-blue-600/25 p-2 rounded-xl border border-blue-500/35 shadow-inner">
+                    <i data-lucide="shield-check" class="w-8 h-8 text-blue-400"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black tracking-tight bg-gradient-to-l from-white via-slate-100 to-blue-200 bg-clip-text text-transparent">EL Contractor Audit</h1>
+                    <p class="text-[11px] text-blue-300 font-semibold tracking-wide mt-0.5">المنصة السحابية المتقدمة لتدقيق عوائد واشتراكات وكلاء الجنوب وصلاح الدين</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="inline-flex items-center gap-1.5 bg-blue-950/80 border border-blue-800 px-4 py-2 rounded-full text-xs font-black text-blue-200">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    نظام الفرز المالي الموحد
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="container mx-auto px-6 py-8 flex-1">
+        
+        <!-- Premium Upload Section -->
+        <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 md:p-12 mb-8 text-center max-w-3xl mx-auto transition-all duration-300 hover:shadow-2xl relative overflow-hidden group no-print">
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-indigo-600 to-cyan-500"></div>
+            <div class="w-20 h-20 mx-auto bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-5 transition-transform duration-500 group-hover:scale-105 shadow-inner border border-blue-100">
+                <i data-lucide="file-spreadsheet" class="w-10 h-10"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2 text-slate-800">تحميل مستند الحركات (CSV)</h2>
+            <p class="text-slate-500 mb-6 text-sm max-w-md mx-auto leading-relaxed">يرجى رفع ملف الحركات للبدء في المطابقة وتدقيق باقات الـ FIBER واحتساب عوائد الوكلاء بدقة</p>
+            
+            <label class="cursor-pointer bg-blue-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-2xl shadow-lg shadow-blue-200 hover:shadow-indigo-300 transition-all duration-300 inline-flex items-center gap-3 font-bold text-sm tracking-wide">
+                <i data-lucide="upload-cloud" class="w-5 h-5"></i>
+                <span>رفع ملف البيانات</span>
+                <input type="file" id="csvFileInput" accept=".csv" class="hidden">
+            </label>
+            <div id="fileNameDisplay" class="mt-5 text-sm font-bold text-emerald-700 bg-emerald-50 border border-emerald-150 px-5 py-2.5 rounded-xl inline-flex items-center gap-2.5 hidden"></div>
+        </div>
+
+        <!-- System Loader (Simulating Analysis) -->
+        <div id="loader" class="hidden flex flex-col justify-center items-center py-16 gap-4 no-print">
+            <div class="relative flex items-center justify-center">
+                <div class="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                <i data-lucide="calculator" class="w-6 h-6 text-blue-600 absolute"></i>
+            </div>
+            <span class="text-slate-600 text-sm font-bold animate-pulse">جاري مطابقة وتدقيق الحركات واحتساب التوزيع المالي للباقات...</span>
+        </div>
+        
+        <!-- Dynamic Error Notification -->
+        <div id="errorMessage" class="hidden bg-rose-50 text-rose-700 p-5 rounded-2xl mb-8 text-center border border-rose-150 flex items-center justify-center gap-3 font-bold shadow-sm no-print">
+            <i data-lucide="alert-triangle" class="w-6 h-6 text-rose-600"></i>
+            <span id="errorText">حدث خطأ أثناء قراءة المستند.</span>
+        </div>
+
+        <!-- Dashboard Summary KPIs -->
+        <div id="summarySection" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8 no-print">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 border-r-4 border-blue-600 flex items-center gap-4 transition-all hover:shadow-md">
+                <div class="p-3 bg-blue-50 rounded-xl text-blue-600">
+                    <i data-lucide="users" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="text-slate-400 text-[11px] font-bold uppercase tracking-wider">إجمالي الوكلاء</p>
+                    <p id="totalContractors" class="text-xl font-black text-slate-800 mt-1">0</p>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 border-r-4 border-indigo-600 flex items-center gap-4 transition-all hover:shadow-md">
+                <div class="p-3 bg-indigo-50 rounded-xl text-indigo-600">
+                    <i data-lucide="check-check" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="text-slate-400 text-[11px] font-bold uppercase tracking-wider">العمليات المطابقة</p>
+                    <p id="totalClassifiedOperations" class="text-xl font-black text-slate-800 mt-1">0</p>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 border-r-4 border-emerald-600 flex items-center gap-4 transition-all hover:shadow-md">
+                <div class="p-3 bg-emerald-50 rounded-xl text-emerald-600">
+                    <i data-lucide="landmark" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="text-slate-400 text-[11px] font-bold uppercase tracking-wider">العوائد المالية المدققة</p>
+                    <p id="totalAuditedValue" class="text-xl font-black text-emerald-700 mt-1">0 د.ع</p>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 border-r-4 border-amber-500 flex items-center gap-4 transition-all hover:shadow-md">
+                <div class="p-3 bg-amber-50 rounded-xl text-amber-600">
+                    <i data-lucide="map" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="text-slate-400 text-[11px] font-bold uppercase tracking-wider">المحافظات النشطة</p>
+                    <p id="totalZones" class="text-xl font-black text-slate-800 mt-1">0</p>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 border-r-4 border-slate-500 flex items-center gap-4 transition-all hover:shadow-md font-sans">
+                <div class="p-3 bg-slate-50 rounded-xl text-slate-600">
+                    <i data-lucide="database" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="text-slate-400 text-[11px] font-bold uppercase tracking-wider">السجلات المقروءة</p>
+                    <p id="totalTransactions" class="text-xl font-black text-slate-800 mt-1">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Unified Premium Control Toolbar -->
+        <div id="toolbarSection" class="hidden mb-6 bg-white p-4 rounded-2xl shadow-sm border border-slate-150/60 flex flex-col xl:flex-row justify-between items-center gap-4 sticky top-[84px] z-40 no-print">
+            <!-- Intelligent Search Box -->
+            <div class="relative w-full xl:w-1/4">
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <i data-lucide="search" class="w-5 h-5 text-slate-400"></i>
+                </div>
+                <input type="text" id="searchInput" class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 block w-full pr-10 p-3 outline-none transition-all duration-200 font-bold" placeholder="ابحث عن وكيل، زون، أو قيمة بالجدول...">
+            </div>
+
+            <!-- View Swapping Control Tabbed Bar -->
+            <div class="flex flex-wrap items-center justify-center xl:justify-end gap-3 w-full xl:w-auto">
+                <div id="viewTabs" class="flex flex-wrap gap-1 bg-slate-50 p-1 rounded-xl border border-slate-100">
+                    <button onclick="switchView('contractor')" id="tab-contractor" class="tab-btn active bg-white text-blue-700 font-bold px-4 py-2 rounded-lg shadow-sm transition-all flex items-center gap-1.5 text-xs">
+                        <i data-lucide="user-check" class="w-4 h-4"></i> حسب الوكيل
+                    </button>
+                    <button onclick="switchView('subscription')" id="tab-subscription" class="tab-btn text-slate-600 font-bold px-4 py-2 rounded-lg hover:text-slate-800 transition-all flex items-center gap-1.5 text-xs">
+                        <i data-lucide="credit-card" class="w-4 h-4"></i> تفاصيل اشتراكات الوكلاء
+                    </button>
+                    <button onclick="switchView('zone')" id="tab-zone" class="tab-btn text-slate-600 font-bold px-4 py-2 rounded-lg hover:text-slate-800 transition-all flex items-center gap-1.5 text-xs">
+                        <i data-lucide="map-pin" class="w-4 h-4"></i> حسب المنطقة
+                    </button>
+                    <button onclick="switchView('table')" id="tab-table" class="tab-btn text-slate-600 font-bold px-4 py-2 rounded-lg hover:text-slate-800 transition-all flex items-center gap-1.5 text-xs">
+                        <i data-lucide="table-2" class="w-4 h-4"></i> جدول البيانات
+                    </button>
+                    <button onclick="switchView('detailed')" id="tab-detailed" class="tab-btn text-slate-600 font-bold px-4 py-2 rounded-lg hover:text-slate-800 transition-all flex items-center gap-1.5 text-xs">
+                        <i data-lucide="file-text" class="w-4 h-4"></i> الملف التفصيلي للوكيل
+                    </button>
+                </div>
+                
+                <div class="hidden xl:block w-px h-8 bg-slate-200"></div>
+
+                <!-- Export Actions -->
+                <div class="flex items-center gap-2">
+                    <button onclick="openExportModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-lg hover:shadow-indigo-200/50 transition-all duration-200 flex items-center gap-2 text-xs shrink-0">
+                        <i data-lucide="map" class="w-4 h-4"></i> تصدير المحافظة
+                    </button>
+                    <button onclick="triggerCompleteExport()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-lg hover:shadow-emerald-200/50 transition-all duration-200 flex items-center gap-2 text-xs shrink-0">
+                        <i data-lucide="download" class="w-4 h-4"></i> تصدير البيانات كاملة
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Results Mounting Point -->
+        <div id="resultsContainer" class="space-y-4">
+            <!-- Welcome Empty State -->
+            <div id="emptyState" class="bg-white rounded-3xl border border-slate-100 p-16 text-center text-slate-400 shadow-sm no-print">
+                <i data-lucide="database-backup" class="w-16 h-16 mx-auto mb-4 opacity-30 text-blue-500 animate-pulse"></i>
+                <p class="font-black text-lg text-slate-700">بانتظار تحميل مستند الحركات</p>
+                <p class="text-sm mt-1 max-w-xs mx-auto text-slate-400">يرجى رفع ملف الـ CSV للبدء بفرز الوكلاء وتدقيق المبالغ المالية</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Smart Export Governorate Modal Container -->
+    <div id="exportModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden no-print">
+        <div class="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-md w-full overflow-hidden transform transition-all scale-95 duration-200">
+            <div class="p-6 border-b border-slate-150 flex justify-between items-center bg-slate-50/80">
+                <div class="flex items-center gap-2.5 text-slate-800 font-black">
+                    <i data-lucide="file-spreadsheet" class="w-5 h-5 text-emerald-600"></i>
+                    <span>تصدير تقرير المحافظة</span>
+                </div>
+                <button onclick="closeExportModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 space-y-5">
+                <div>
+                    <label for="govExportSelector" class="block text-sm font-bold text-slate-700 mb-2">اختر المحافظة أولاً لبناء الملف الخاص بها:</label>
+                    <select id="govExportSelector" class="bg-slate-50 border border-slate-200 text-slate-850 text-sm font-bold rounded-xl p-3 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 w-full">
+                        <!-- Dynamic Options will be mounted here -->
+                    </select>
+                </div>
+
+                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-3">
+                    <h4 class="text-xs font-black text-slate-700 flex items-center gap-1.5">
+                        <i data-lucide="info" class="w-4 h-4 text-blue-500"></i>
+                        بنية التقرير المستخرج:
+                    </h4>
+                    <ul class="text-[11px] text-slate-500 space-y-2 list-disc list-inside font-semibold leading-relaxed">
+                        <li><strong>ورقة الملخص العام:</strong> تحتوي على جدول مجمع وموحد لكافة الوكلاء في المحافظة المختارة مع إجمالي عملياتهم وقيمتهم المالية.</li>
+                        <li><strong>أوراق الوكلاء الفردية:</strong> سيتم إنشاء ورقة (Sheet) مستقلة لكل وكيل تحتوي على حركاته بالتفصيل الكامل والزونات المستهدفة.</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="p-4 bg-slate-50 border-t border-slate-150 flex justify-end gap-3">
+                <button onclick="closeExportModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-500 hover:bg-slate-100 transition-colors">إلغاء</button>
+                <button onclick="triggerGovernorateExport()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg hover:shadow-emerald-200/50 transition-all text-xs flex items-center gap-1.5">
+                    <i data-lucide="download-cloud" class="w-4 h-4"></i>
+                    توليد وتصدير الملف
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // DOM Elements mapping
+        const fileInput = document.getElementById('csvFileInput');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        const loader = document.getElementById('loader');
+        const errorMessage = document.getElementById('errorMessage');
+        const summarySection = document.getElementById('summarySection');
+        const toolbarSection = document.getElementById('toolbarSection');
+        const searchInput = document.getElementById('searchInput');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const emptyState = document.getElementById('emptyState');
+        const exportModal = document.getElementById('exportModal');
+        const govExportSelector = document.getElementById('govExportSelector');
+        
+        // Summary Cards elements mapping
+        const totalContractorsEl = document.getElementById('totalContractors');
+        const totalClassifiedOperationsEl = document.getElementById('totalClassifiedOperations');
+        const totalAuditedValueEl = document.getElementById('totalAuditedValue');
+        const totalZonesEl = document.getElementById('totalZones');
+        const totalTransactionsEl = document.getElementById('totalTransactions');
+
+        // Global Application State Store
+        let globalData = null;
+        let globalFlatData = [];
+        let currentView = 'contractor';
+        let selectedContractorName = ""; // Active Contractor for detailed dossiers
+
+        // المجموعات الجغرافية المستهدفة فقط
+        const allowedZones = {
+            'FBS': 'البصرة (Basrah - FBS)',
+            'FTK': 'صلاح الدين (Salah aldin - FTK)',
+            'FAM': 'ميسان (Misan - FAM)',
+            'FMU': 'المثنى (Muthanna - FMU)',
+            'FNS': 'ذي قار (Thy Qar - FNS)'
+        };
+
+        // التعريفات والأسعار المعتمدة للعمليات لاحتساب المجموع المالي الكلي والعمولات بدقة
+        const OP_PRICES = {
+            'تنصيب اشتراك جديد (أول شهر)': 15000,
+            'تجديد الشهر الثاني من الاشتراك الجديد': 25000,
+            'إرجاع للخدمة (شهر واحد)': 29000,
+            'إرجاع للخدمة (شهرين)': 49000,
+            'إرجاع للخدمة (3 أشهر)': 59000,
+            'تجديد اشتراك FIBER 35': 35000,
+            'تجديد اشتراك FIBER 50': 45000,
+            'تجديد اشتراك FIBER 75': 65000,
+            'تجديد اشتراك FIBER 150': 100000
+        };
+
+        // تحديد مسمى باقة الاشتراك والتوحيد تحت مظلة باقة FIBER 35 للمبالغ المذكورة
+        const getSubscription = (op) => {
+            if(op.includes('أول شهر') || 
+               op.includes('الشهر الثاني') || 
+               op.includes('شهر واحد') || 
+               op.includes('شهرين') || 
+               op.includes('3 أشهر') || 
+               op.includes('FIBER 35')) {
+                return 'FIBER 35';
+            }
+            if(op.includes('FIBER 50')) return 'FIBER 50';
+            if(op.includes('FIBER 75')) return 'FIBER 75';
+            if(op.includes('FIBER 150')) return 'FIBER 150';
+            return 'غير محدد';
+        };
+
+        // Global Search Filter Handler
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.trim().toLowerCase();
+            if(!globalData) return;
+            
+            if (currentView === 'table') {
+                const filteredFlat = globalFlatData.filter(row => 
+                    row.contractor.toLowerCase().includes(searchTerm) || 
+                    row.zone.toLowerCase().includes(searchTerm) ||
+                    row.governorate.toLowerCase().includes(searchTerm) ||
+                    row.subscription.toLowerCase().includes(searchTerm) ||
+                    row.opType.toLowerCase().includes(searchTerm)
+                );
+                renderTable(filteredFlat);
+                return;
+            }
+
+            if (currentView === 'detailed') {
+                const selector = document.getElementById('contractorSelector');
+                if (selector) {
+                    const options = selector.options;
+                    for (let i = 0; i < options.length; i++) {
+                        if (options[i].text.toLowerCase().includes(searchTerm)) {
+                            selector.selectedIndex = i;
+                            selectedContractorName = options[i].value;
+                            renderDetailedProfile(selectedContractorName);
+                            break;
+                        }
+                    }
+                }
+                return;
+            }
+
+            let dataToRender = {};
+            let activeData = globalData.byContractor;
+            let mainIcon = 'user-check';
+            let subIcon = 'map';
+
+            if (currentView === 'subscription') {
+                renderSubscriptionsBreakdown(searchTerm);
+                return;
+            } else if (currentView === 'zone') {
+                activeData = globalData.byZone;
+                mainIcon = 'map-pin';
+                subIcon = 'user-check';
+            }
+
+            if (searchTerm === "") {
+                dataToRender = activeData;
+            } else {
+                for (const [key, value] of Object.entries(activeData)) {
+                    let matchFound = key.toLowerCase().includes(searchTerm);
+                    
+                    if (!matchFound) {
+                        for (const subKey of Object.keys(value.subGroups)) {
+                            if (subKey.toLowerCase().includes(searchTerm)) {
+                                matchFound = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (matchFound) {
+                        dataToRender[key] = value;
+                    }
+                }
+            }
+
+            renderDashboard(dataToRender, mainIcon, subIcon);
+        });
+
+        // Trigger parser on file upload
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            fileNameDisplay.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i> تم تحميل المستند: ${file.name}`;
+            fileNameDisplay.classList.remove('hidden');
+            errorMessage.classList.add('hidden');
+            summarySection.classList.add('hidden');
+            toolbarSection.classList.add('hidden');
+            searchInput.value = '';
+            resultsContainer.innerHTML = '';
+            emptyState.classList.add('hidden');
+            loader.classList.remove('hidden');
+            lucide.createIcons();
+
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    processData(results.data);
+                },
+                error: function(err) {
+                    showError("حدث خطأ في قراءة ملف البيانات. يرجى التأكد من ترميز الملف.");
+                    loader.classList.add('hidden');
+                }
+            });
+        });
+
+        function showError(msg) {
+            errorText.textContent = msg;
+            errorMessage.classList.remove('hidden');
+            emptyState.classList.remove('hidden');
+            loader.classList.add('hidden');
+        }
+
+        // معالجة البيانات وبناء مصفوفات الفرز والتصنيف والتوحيد الحسابي
+        function processData(data) {
+            if (data.length === 0) {
+                showError("المستند المستورد فارغ ولا يحتوي على سجلات.");
+                return;
+            }
+
+            const keys = Object.keys(data[0]);
+            const getCol = (possible) => keys.find(k => possible.some(p => k.toLowerCase().includes(p)));
+            
+            const CONTRACTOR_COL = getCol(['contractor', 'dealer', 'وكيل', 'الوكيل']) || 'Contractor';
+            const ZONE_COL = getCol(['zone', 'region', 'منطقة', 'المنطقة']) || 'Zone';
+            const DISCOUNT_TYPE_COL = getCol(['discount type', 'discount_type', 'نوع الخصم', 'الخصم']) || 'Discount Type';
+            const AMOUNT_COL = getCol(['amount', 'price', 'مبلغ', 'القيمة']) || 'Amount';
+
+            if (!getCol(['contractor', 'dealer', 'وكيل', 'الوكيل']) || !getCol(['amount', 'price', 'مبلغ', 'القيمة'])) {
+                showError("تنبيه: لم يتم العثور على الأعمدة الأساسية بالمستند المستورد (الوكيل والمبلغ).");
+                return;
+            }
+
+            const byContractor = {};
+            const bySubscription = {};
+            const byZone = {};
+            let globalTransCount = 0;
+            let classifiedOperationsCount = 0;
+            let totalAuditedIqd = 0;
+            const uniqueZoneCodes = new Set();
+
+            data.forEach(row => {
+                globalTransCount++;
+
+                const contractor = row[CONTRACTOR_COL] ? row[CONTRACTOR_COL].trim() : null;
+                if (!contractor) return;
+
+                const rawZone = row[ZONE_COL] ? row[ZONE_COL].trim().toUpperCase() : '';
+                
+                let isValidZone = false;
+                for (const code of Object.keys(allowedZones)) {
+                    if (rawZone.includes(code)) {
+                        isValidZone = true;
+                        break;
+                    }
+                }
+
+                if (!isValidZone) return; // استبعاد المناطق والزونات غير المشمولة
+
+                const zone = rawZone;
+                const discountType = row[DISCOUNT_TYPE_COL] ? row[DISCOUNT_TYPE_COL].trim().toUpperCase() : '';
+                const rawAmount = row[AMOUNT_COL] ? row[AMOUNT_COL].toString() : '0';
+                const cleanAmountString = rawAmount.replace(/,/g, '').replace(/\s/g, '');
+                const amount = Math.floor(parseFloat(cleanAmountString) || 0);
+
+                let operationType = null;
+                let subscriptionType = 'غير محدد';
+
+                const isNAOrBlank = discountType === 'NA' || discountType === 'N/A' || discountType === '#N/A' || discountType === 'NULL' || discountType === '' || discountType === '0';
+
+                // قواعد الفرز الذكية للعمولات والمطابقة الحسابية
+                if (discountType.includes('FLAT')) {
+                    if (amount === 15000) {
+                        operationType = 'تنصيب اشتراك جديد (أول شهر)';
+                        subscriptionType = 'FIBER 35';
+                    } else if (amount === 25000) {
+                        operationType = 'تجديد الشهر الثاني من الاشتراك الجديد';
+                        subscriptionType = 'FIBER 35';
+                    } else if (amount === 29000) {
+                        operationType = 'إرجاع للخدمة (شهر واحد)';
+                        subscriptionType = 'FIBER 35';
+                    } else if (amount === 49000) {
+                        operationType = 'إرجاع للخدمة (شهرين)';
+                        subscriptionType = 'FIBER 35';
+                    } else if (amount === 59000) {
+                        operationType = 'إرجاع للخدمة (3 أشهر)';
+                        subscriptionType = 'FIBER 35';
+                    }
+                } else if (isNAOrBlank) {
+                    if (amount === 35000) {
+                        operationType = 'تجديد اشتراك FIBER 35';
+                        subscriptionType = 'FIBER 35';
+                    } else if (amount === 45000) {
+                        operationType = 'تجديد اشتراك FIBER 50';
+                        subscriptionType = 'FIBER 50';
+                    } else if (amount === 65000) {
+                        operationType = 'تجديد اشتراك FIBER 75';
+                        subscriptionType = 'FIBER 75';
+                    } else if (amount === 100000) {
+                        operationType = 'تجديد اشتراك FIBER 150';
+                        subscriptionType = 'FIBER 150';
+                    }
+                }
+
+                if (!operationType) return; // تخطي الحركات غير المطابقة للشروط
+                classifiedOperationsCount++;
+                uniqueZoneCodes.add(zone);
+
+                const opPrice = OP_PRICES[operationType] || 0;
+                totalAuditedIqd += opPrice;
+
+                const populate = (dict, mainKey, subKey) => {
+                    if (!dict[mainKey]) dict[mainKey] = { totalOperations: 0, subGroups: {} };
+                    dict[mainKey].totalOperations++;
+                    
+                    if (!dict[mainKey].subGroups[subKey]) dict[mainKey].subGroups[subKey] = { totalOperations: 0, types: {} };
+                    dict[mainKey].subGroups[subKey].totalOperations++;
+                    
+                    dict[mainKey].subGroups[subKey].types[operationType] = (dict[mainKey].subGroups[subKey].types[operationType] || 0) + 1;
+                };
+
+                populate(byContractor, contractor, zone);
+                populate(bySubscription, subscriptionType, `${contractor} (${zone})`);
+                populate(byZone, zone, contractor);
+            });
+
+            const contractorsCount = Object.keys(byContractor).length;
+
+            if (contractorsCount === 0) {
+                showError("لم يتم العثور على أي عمليات مطابقة في الزونات والأسعار المستهدفة بالملف.");
+                return;
+            }
+
+            globalData = { byContractor, bySubscription, byZone };
+
+            // بناء جدول البيانات المسطح
+            globalFlatData = [];
+            for (const [contractor, cData] of Object.entries(byContractor)) {
+                for (const [zone, zData] of Object.entries(cData.subGroups)) {
+                    
+                    let governorate = "أخرى";
+                    for (const [code, name] of Object.entries(allowedZones)) {
+                        if (zone.includes(code)) {
+                            governorate = name;
+                            break;
+                        }
+                    }
+
+                    for (const [opType, count] of Object.entries(zData.types)) {
+                        globalFlatData.push({
+                            contractor: contractor,
+                            governorate: governorate,
+                            zone: zone,
+                            subscription: getSubscription(opType),
+                            opType: opType,
+                            count: count,
+                            individualValue: OP_PRICES[opType] || 0,
+                            totalValue: (OP_PRICES[opType] || 0) * count
+                        });
+                    }
+                }
+            }
+
+            // ترتيب البيانات المسطحة أبجدياً
+            globalFlatData.sort((a, b) => a.governorate.localeCompare(b.governorate) || a.zone.localeCompare(b.zone) || a.contractor.localeCompare(b.contractor));
+
+            // تعيين الوكيل الافتراضي للملف التفصيلي
+            const allContractorNames = Object.keys(byContractor).sort();
+            if (allContractorNames.length > 0) {
+                selectedContractorName = allContractorNames[0];
+            }
+
+            // تحديث إحصائيات لوحة التحكم
+            totalContractorsEl.textContent = contractorsCount.toLocaleString('en-US');
+            totalClassifiedOperationsEl.textContent = classifiedOperationsCount.toLocaleString('en-US');
+            totalAuditedValueEl.textContent = totalAuditedIqd.toLocaleString('en-US') + " د.ع";
+            totalZonesEl.textContent = uniqueZoneCodes.size.toLocaleString('en-US');
+            totalTransactionsEl.textContent = globalTransCount.toLocaleString('en-US');
+
+            loader.classList.add('hidden');
+            summarySection.classList.remove('hidden');
+            toolbarSection.classList.remove('hidden');
+
+            switchView('contractor');
+        }
+
+        // تبديل واجهات العرض والتبويبات
+        function switchView(viewName) {
+            currentView = viewName;
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn text-slate-600 font-bold px-4 py-2 rounded-lg hover:text-slate-800 transition-all flex items-center gap-1.5 text-xs";
+            });
+            
+            const activeTab = document.getElementById(`tab-${viewName}`);
+            activeTab.className = "tab-btn active bg-white text-blue-700 font-bold px-4 py-2 rounded-lg shadow-sm border border-slate-150 transition-all flex items-center gap-1.5 text-xs";
+            
+            searchInput.value = '';
+
+            if (viewName === 'table') {
+                renderTable(globalFlatData);
+            } else if (viewName === 'contractor') {
+                renderDashboard(globalData.byContractor, 'user-check', 'map');
+            } else if (viewName === 'subscription') {
+                renderSubscriptionsBreakdown();
+            } else if (viewName === 'zone') {
+                renderDashboard(globalData.byZone, 'map-pin', 'user-check');
+            } else if (viewName === 'detailed') {
+                renderDetailedProfile(selectedContractorName);
+            }
+        }
+
+        // بناء تبويب جدول البيانات المسطح
+        function renderTable(flatData) {
+            resultsContainer.innerHTML = '';
+            
+            if (flatData.length === 0) {
+                 resultsContainer.innerHTML = `
+                    <div class="bg-amber-50 text-amber-800 p-8 rounded-2xl text-center border border-amber-100 flex flex-col items-center gap-2">
+                        <i data-lucide="search-x" class="w-10 h-10 opacity-60"></i>
+                        <p class="font-bold">لا توجد نتائج مطابقة لبحثك</p>
+                    </div>`;
+                 lucide.createIcons();
+                 return;
+            }
+
+            const tableContainer = document.createElement('div');
+            tableContainer.className = "overflow-x-auto bg-white rounded-2xl shadow-sm border border-slate-150/80";
+
+            let tableHTML = `
+                <table class="w-full text-sm text-right text-slate-500">
+                    <thead class="text-xs text-slate-700 bg-slate-50 border-b border-slate-150">
+                        <tr>
+                            <th class="px-6 py-4 font-black">المحافظة</th>
+                            <th class="px-6 py-4 font-black">اسم الزون الأصلي</th>
+                            <th class="px-6 py-4 font-black">الوكيل</th>
+                            <th class="px-6 py-4 font-black">نوع الاشتراك الموحد</th>
+                            <th class="px-6 py-4 font-black">العملية المنجزة</th>
+                            <th class="px-6 py-4 font-black text-center">العدد</th>
+                            <th class="px-6 py-4 text-center font-black">إجمالي المبالغ (د.ع)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 font-medium">
+            `;
+
+            flatData.forEach(row => {
+                let badgeColor = "bg-slate-100 text-slate-700 border-slate-200";
+                if (row.opType.includes('تنصيب')) badgeColor = "bg-blue-50 text-blue-700 border-blue-100";
+                else if (row.opType.includes('إرجاع')) badgeColor = "bg-amber-50 text-amber-700 border-amber-100";
+                else if (row.opType.includes('تجديد') && row.opType.includes('FIBER')) badgeColor = "bg-emerald-50 text-emerald-700 border-emerald-100";
+                else if (row.opType.includes('تجديد الشهر الثاني')) badgeColor = "bg-purple-50 text-purple-700 border-purple-100";
+
+                tableHTML += `
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-6 py-4 font-bold text-slate-700 whitespace-nowrap">${row.governorate}</td>
+                        <td class="px-6 py-4 font-bold text-emerald-700 whitespace-nowrap">${row.zone}</td>
+                        <td class="px-6 py-4 font-bold text-slate-900">${row.contractor}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-xs font-bold text-slate-700">
+                                ${row.subscription}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4"><span class="text-xs font-bold px-2.5 py-1 rounded-full border ${badgeColor}">${row.opType}</span></td>
+                        <td class="px-6 py-4 text-center font-bold text-slate-800 text-base">${row.count}</td>
+                        <td class="px-6 py-4 text-center font-black text-blue-600 text-sm whitespace-nowrap">${row.totalValue.toLocaleString('en-US')} د.ع</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `</tbody></table>`;
+            tableContainer.innerHTML = tableHTML;
+            resultsContainer.appendChild(tableContainer);
+            lucide.createIcons();
+        }
+
+        // بناء تبويب تفاصيل مصفوفة الاشتراكات للوكلاء
+        function renderSubscriptionsBreakdown(searchTerm = "") {
+            resultsContainer.innerHTML = '';
+            
+            if(!globalData) return;
+
+            // تجميع وتفكيك الحركات لكل وكيل حسب الباقة
+            const contractorSubs = {};
+
+            globalFlatData.forEach(row => {
+                if(!contractorSubs[row.contractor]) {
+                    contractorSubs[row.contractor] = {
+                        governorate: row.governorate,
+                        totalOps: 0,
+                        totalVal: 0,
+                        breakdown: {
+                            'FIBER 35': { count: 0, val: 0 },
+                            'FIBER 50': { count: 0, val: 0 },
+                            'FIBER 75': { count: 0, val: 0 },
+                            'FIBER 150': { count: 0, val: 0 }
+                        }
+                    };
+                }
+                const sub = row.subscription;
+                if(contractorSubs[row.contractor].breakdown[sub]) {
+                    contractorSubs[row.contractor].breakdown[sub].count += row.count;
+                    contractorSubs[row.contractor].breakdown[sub].val += row.totalValue;
+                    contractorSubs[row.contractor].totalOps += row.count;
+                    contractorSubs[row.contractor].totalVal += row.totalValue;
+                }
+            });
+
+            let filteredContractors = Object.entries(contractorSubs);
+            if(searchTerm !== "") {
+                filteredContractors = filteredContractors.filter(([name, data]) => 
+                    name.toLowerCase().includes(searchTerm) || 
+                    data.governorate.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            if(filteredContractors.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="bg-amber-50 text-amber-800 p-8 rounded-2xl text-center border border-amber-100 flex flex-col items-center gap-2">
+                        <i data-lucide="search-x" class="w-10 h-10 opacity-60"></i>
+                        <p class="font-bold">لا توجد باقات مطابقة لبحثك</p>
+                    </div>`;
+                 lucide.createIcons();
+                 return;
+            }
+
+            const gridContainer = document.createElement('div');
+            gridContainer.className = "grid grid-cols-1 lg:grid-cols-2 gap-6";
+
+            filteredContractors.forEach(([contractor, cData]) => {
+                const totalValFormatted = cData.totalVal.toLocaleString('en-US') + " د.ع";
+                
+                let progressBarsHTML = '';
+                const colors = {
+                    'FIBER 35': 'from-blue-500 to-indigo-600',
+                    'FIBER 50': 'from-emerald-500 to-teal-600',
+                    'FIBER 75': 'from-purple-500 to-indigo-700',
+                    'FIBER 150': 'from-amber-500 to-orange-600'
+                };
+
+                for(const [subName, subStats] of Object.entries(cData.breakdown)) {
+                    const pct = cData.totalOps > 0 ? ((subStats.count / cData.totalOps) * 100).toFixed(0) : 0;
+                    progressBarsHTML += `
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between items-center text-xs font-bold text-slate-700">
+                                <span class="flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-gradient-to-r ${colors[subName]}"></span>
+                                    ${subName}
+                                </span>
+                                <span class="text-slate-500">${subStats.count} حركة (${pct}%)</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                <div class="bg-gradient-to-r ${colors[subName]} h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                            </div>
+                            <div class="flex justify-end text-[10px] text-slate-400 font-bold">
+                                <span>المجموع: ${subStats.val.toLocaleString('en-US')} د.ع</span>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                gridContainer.innerHTML += `
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between transition-all hover:shadow-md">
+                        <div>
+                            <div class="flex justify-between items-start mb-4 pb-3 border-b border-slate-100">
+                                <div>
+                                    <span class="text-[10px] font-black bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 rounded-md">${cData.governorate}</span>
+                                    <h3 class="text-base font-black text-slate-800 mt-1.5">${contractor}</h3>
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-[10px] text-slate-400 font-bold">مجموع العوائد المدققة</p>
+                                    <p class="text-base font-black text-emerald-600 mt-0.5">${totalValFormatted}</p>
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                ${progressBarsHTML}
+                            </div>
+                        </div>
+                        <div class="mt-5 pt-3 border-t border-slate-50 flex justify-between items-center text-xs font-bold text-slate-500">
+                            <span>إجمالي حركات المحفظة:</span>
+                            <span class="text-blue-600 font-black bg-blue-50/50 px-2.5 py-1 rounded-lg">${cData.totalOps} حركة</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            resultsContainer.appendChild(gridContainer);
+            lucide.createIcons();
+        }
+
+        // بناء وتصميم صفحة التقرير والملف التفصيلي الشامل لكل وكيل بالتفصيل الممل
+        function renderDetailedProfile(contractorName) {
+            resultsContainer.innerHTML = '';
+            
+            if (!globalData || !globalData.byContractor[contractorName]) {
+                resultsContainer.innerHTML = `
+                    <div class="bg-amber-50 text-amber-800 p-8 rounded-2xl text-center border border-amber-100">
+                        <p class="font-bold">يرجى رفع ملف البيانات لعرض الملفات التفصيلية للوكلاء</p>
+                    </div>`;
+                return;
+            }
+
+            const contractorData = globalData.byContractor[contractorName];
+            const allContractorNames = Object.keys(globalData.byContractor).sort();
+
+            // تصنيف وإعداد العمليات للوكيل المحدد
+            let totalIqdValue = 0;
+            let totalOpsCount = 0;
+            const zoneOperations = {};
+            const subTypeCounts = {
+                'FIBER 35': { total: 0, detail: {} },
+                'FIBER 50': 0,
+                'FIBER 75': 0,
+                'FIBER 150': 0
+            };
+
+            const contractorRows = globalFlatData.filter(r => r.contractor === contractorName);
+
+            contractorRows.forEach(row => {
+                totalIqdValue += row.totalValue;
+                totalOpsCount += row.count;
+
+                if (!zoneOperations[row.zone]) zoneOperations[row.zone] = 0;
+                zoneOperations[row.zone] += row.count;
+
+                if (row.subscription === 'FIBER 35') {
+                    subTypeCounts['FIBER 35'].total += row.count;
+                    subTypeCounts['FIBER 35'].detail[row.opType] = (subTypeCounts['FIBER 35'].detail[row.opType] || 0) + row.count;
+                } else {
+                    subTypeCounts[row.subscription] = (subTypeCounts[row.subscription] || 0) + row.count;
+                }
+            });
+
+            const dossierDiv = document.createElement('div');
+            dossierDiv.className = "space-y-6";
+
+            let selectorOptionsHTML = '';
+            allContractorNames.forEach(name => {
+                const selected = name === contractorName ? 'selected' : '';
+                selectorOptionsHTML += `<option value="${name}" ${selected}>${name}</option>`;
+            });
+
+            const headerControlHTML = `
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 no-print">
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <label for="contractorSelector" class="text-sm font-bold text-slate-700 shrink-0">اختر الوكيل المستهدف:</label>
+                        <select id="contractorSelector" onchange="onContractorSelectorChange(this.value)" class="bg-slate-50 border border-slate-200 text-slate-800 text-sm font-bold rounded-xl p-2.5 outline-none focus:ring-4 focus:ring-blue-500/10 w-full sm:w-64">
+                            ${selectorOptionsHTML}
+                        </select>
+                    </div>
+                    <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg hover:shadow-blue-200/50 transition-all flex items-center gap-2 text-sm w-full sm:w-auto justify-center">
+                        <i data-lucide="printer" class="w-4 h-4"></i> طباعة ملف الوكيل الحالي
+                    </button>
+                </div>
+            `;
+
+            const mainHeaderHTML = `
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-150 border-r-8 border-blue-900 print-card flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div>
+                        <div class="flex items-center gap-2 text-blue-900 font-black text-xs uppercase tracking-wider mb-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse"></span>
+                            الملف التفصيلي الشامل والموثق للوكيل
+                        </div>
+                        <h2 class="text-2xl font-black text-slate-850">${contractorName}</h2>
+                        <p class="text-slate-400 text-xs mt-1 font-semibold">تاريخ التدقيق: ${new Date().toLocaleDateString('ar-IQ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    </div>
+                    <div class="flex flex-wrap gap-4 font-sans">
+                        <div class="px-5 py-3 bg-blue-50/50 rounded-xl text-center border border-blue-100">
+                            <p class="text-xs text-slate-400 font-bold mb-1 font-sans">إجمالي العمليات المعتمدة</p>
+                            <p class="text-xl font-black text-blue-900">${totalOpsCount.toLocaleString('en-US')}</p>
+                        </div>
+                        <div class="px-5 py-3 bg-emerald-50 rounded-xl text-center border border-emerald-100">
+                            <p class="text-xs text-slate-400 font-bold mb-1 font-sans">القيمة المالية الكلية لعمليات التدقيق</p>
+                            <p class="text-xl font-black text-emerald-700">${totalIqdValue.toLocaleString('en-US')} د.ع</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            let fiber35DetailsRowsHTML = '';
+            for (const [opType, count] of Object.entries(subTypeCounts['FIBER 35'].detail)) {
+                const subTotal = (OP_PRICES[opType] || 0) * count;
+                fiber35DetailsRowsHTML += `
+                    <div class="flex justify-between items-center py-2.5 border-b border-slate-100 last:border-0">
+                        <div class="flex flex-col">
+                            <span class="text-xs font-bold text-slate-700">${opType}</span>
+                            <span class="text-[10px] text-slate-400 font-semibold">القيمة الفردية: ${(OP_PRICES[opType] || 0).toLocaleString('en-US')} د.ع</span>
+                        </div>
+                        <div class="text-left font-sans">
+                            <span class="px-2 py-0.5 bg-blue-50 border border-blue-100 text-blue-700 font-black text-xs rounded-md">${count} حركات</span>
+                            <p class="text-xs font-black text-slate-600 mt-0.5">${subTotal.toLocaleString('en-US')} د.ع</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const fiber35CardHTML = `
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 print-card flex flex-col h-full">
+                    <div class="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
+                        <div class="p-2 bg-gradient-to-tr from-blue-500 to-indigo-600 text-white rounded-lg">
+                            <i data-lucide="zap" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-black text-slate-800 text-sm">مخطط تفكيك وتدقيق باقة FIBER 35</h4>
+                            <p class="text-[10px] text-slate-400 font-bold">دمج مبالغ FLAT والاشتراكات المؤقتة</p>
+                        </div>
+                        <span class="mr-auto text-xs font-black bg-blue-50 border border-blue-100 text-blue-800 px-3 py-1 rounded-full font-sans">${subTypeCounts['FIBER 35'].total} حركة</span>
+                    </div>
+                    <div class="space-y-1 flex-1">
+                        ${fiber35DetailsRowsHTML || '<p class="text-xs text-slate-400 text-center py-6 font-semibold">لا توجد عمليات على باقة FIBER 35 لهذا الوكيل</p>'}
+                    </div>
+                </div>
+            `;
+
+            const otherSubsCardHTML = `
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 print-card flex flex-col h-full">
+                    <div class="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
+                        <div class="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                            <i data-lucide="credit-card" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-black text-slate-800 text-sm">إحصائيات توزيع الاشتراكات الإجمالية</h4>
+                            <p class="text-[10px] text-slate-400 font-bold">بما فيها الفايبر وتجديداته الفردية</p>
+                        </div>
+                    </div>
+                    <div class="space-y-4 flex-1 flex flex-col justify-center font-sans">
+                        <div class="flex justify-between items-center py-2 border-b border-slate-50 last:border-0">
+                            <span class="text-xs font-bold text-slate-600">باقة الاشتراكات الشاملة (FIBER 35)</span>
+                            <span class="text-xs font-black bg-slate-100 border border-slate-200 text-slate-700 px-2.5 py-0.5 rounded-full">${subTypeCounts['FIBER 35'].total}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-slate-50 last:border-0">
+                            <span class="text-xs font-bold text-slate-600">باقة (FIBER 50)</span>
+                            <span class="text-xs font-black bg-emerald-50 border border-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full">${subTypeCounts['FIBER 50'] || 0}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-slate-50 last:border-0">
+                            <span class="text-xs font-bold text-slate-600">باقة (FIBER 75)</span>
+                            <span class="text-xs font-black bg-purple-50 border border-purple-100 text-purple-700 px-2.5 py-0.5 rounded-full">${subTypeCounts['FIBER 75'] || 0}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-slate-50 last:border-0">
+                            <span class="text-xs font-bold text-slate-600">باقة (FIBER 150)</span>
+                            <span class="text-xs font-black bg-amber-50 border border-amber-100 text-amber-700 px-2.5 py-0.5 rounded-full">${subTypeCounts['FIBER 150'] || 0}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            let tableRowsHTML = '';
+            contractorRows.forEach(row => {
+                let badgeColor = "bg-slate-100 text-slate-700 border-slate-200";
+                if (row.opType.includes('تنصيب')) badgeColor = "bg-blue-50 text-blue-700 border-blue-100";
+                else if (row.opType.includes('إرجاع')) badgeColor = "bg-amber-50 text-amber-700 border-amber-100";
+                else if (row.opType.includes('تجديد') && row.opType.includes('FIBER')) badgeColor = "bg-emerald-50 text-emerald-700 border-emerald-100";
+                else if (row.opType.includes('تجديد الشهر الثاني')) badgeColor = "bg-purple-50 text-purple-700 border-purple-100";
+
+                tableRowsHTML += `
+                    <tr class="hover:bg-slate-50/50 transition-colors font-sans">
+                        <td class="px-4 py-3 font-bold text-slate-700 text-xs">${row.governorate}</td>
+                        <td class="px-4 py-3 font-semibold text-emerald-700 text-xs">${row.zone}</td>
+                        <td class="px-4 py-3"><span class="px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-700 font-bold text-[11px] rounded">${row.subscription}</span></td>
+                        <td class="px-4 py-3"><span class="text-[11px] font-bold px-2 py-0.5 rounded-full border ${badgeColor}">${row.opType}</span></td>
+                        <td class="px-4 py-3 font-bold text-slate-500 text-xs text-left">${row.individualValue.toLocaleString('en-US')} د.ع</td>
+                        <td class="px-4 py-3 font-bold text-slate-800 text-xs text-center">${row.count}</td>
+                        <td class="px-4 py-3 font-black text-blue-600 text-xs text-left whitespace-nowrap">${row.totalValue.toLocaleString('en-US')} د.ع</td>
+                    </tr>
+                `;
+            });
+
+            const detailedTableHTML = `
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-150 print-card overflow-hidden">
+                    <div class="p-5 border-b border-slate-150 bg-slate-50/70">
+                        <h4 class="font-black text-slate-800 text-sm">التفاصيل الكاملة لسجل عمليات ومبالغ الوكيل</h4>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-right text-slate-500">
+                            <thead class="text-xs text-slate-700 uppercase bg-slate-50/40 border-b border-slate-150">
+                                <tr>
+                                    <th class="px-4 py-3 font-black">المحافظة</th>
+                                    <th class="px-4 py-3 font-black">كود الزون الأصلي</th>
+                                    <th class="px-4 py-3 font-black">الاشتراك المعتمد</th>
+                                    <th class="px-4 py-3 font-black">العملية المنجزة بالتفصيل</th>
+                                    <th class="px-4 py-3 font-black text-left">سعر الحركة</th>
+                                    <th class="px-4 py-3 font-black text-center">العدد المنجز</th>
+                                    <th class="px-4 py-3 font-black text-left">المجموع المالي</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                ${tableRowsHTML}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            dossierDiv.innerHTML = `
+                ${headerControlHTML}
+                ${mainHeaderHTML}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    ${fiber35CardHTML}
+                    ${otherSubsCardHTML}
+                </div>
+                ${detailedTableHTML}
+            `;
+
+            resultsContainer.appendChild(dossierDiv);
+            lucide.createIcons();
+        }
+
+        function onContractorSelectorChange(val) {
+            selectedContractorName = val;
+            renderDetailedProfile(val);
+        }
+
+        // بناء الكروت الرئيسية للتبويبات الأخرى (الوكيل، المنطقة)
+        function renderDashboard(data, mainIcon, subIcon) {
+            resultsContainer.innerHTML = '';
+            
+            const entries = Object.entries(data);
+            
+            if (entries.length === 0) {
+                 resultsContainer.innerHTML = `
+                    <div class="bg-amber-50 text-amber-800 p-8 rounded-2xl text-center border border-amber-100 flex flex-col items-center gap-2">
+                        <i data-lucide="search-x" class="w-10 h-10 opacity-60"></i>
+                        <p class="font-bold">لا تتوفر نتائج تطابق الفلترة المحددة</p>
+                    </div>`;
+                 lucide.createIcons();
+                 return;
+            }
+
+            const sortedItems = entries.sort((a, b) => b[1].totalOperations - a[1].totalOperations);
+            const displayItems = sortedItems.slice(0, 300);
+
+            displayItems.forEach(([mainName, mainData], index) => {
+                const itemId = `item-${index}`;
+                
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden";
+                
+                const header = document.createElement('div');
+                header.className = "p-5 bg-slate-50/70 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-colors";
+                header.onclick = () => toggleAccordion(itemId, header);
+                
+                header.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="bg-indigo-600 text-white w-12 h-12 rounded-xl flex items-center justify-center font-bold shadow-md shrink-0">
+                            <i data-lucide="${mainIcon}" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-black text-slate-800">${mainName}</h3>
+                            <p class="text-xs text-slate-400 mt-1 font-semibold">المعاملات المعتمدة: <span class="font-black text-indigo-600 font-sans">${mainData.totalOperations.toLocaleString('en-US')}</span></p>
+                        </div>
+                    </div>
+                    <div class="transform transition-transform duration-300 bg-white p-2 rounded-full shadow-sm border border-slate-100 shrink-0" id="icon-${itemId}">
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-slate-500"></i>
+                    </div>
+                `;
+
+                const contentWrapper = document.createElement('div');
+                contentWrapper.id = itemId;
+                contentWrapper.className = "accordion-content border-t border-slate-100 bg-white";
+                
+                let subGroupsHTML = `<div class="p-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">`;
+                
+                const sortedSubGroups = Object.entries(mainData.subGroups).sort((a, b) => b[1].totalOperations - a[1].totalOperations);
+
+                sortedSubGroups.forEach(([subName, subData]) => {
+                    let typesHTML = '';
+                    const sortedTypes = Object.entries(subData.types).sort((a, b) => b[1] - a[1]);
+                    
+                    sortedTypes.forEach(([typeName, count]) => {
+                        let badgeColor = "bg-slate-100 text-slate-700 border-slate-200";
+                        if (typeName.includes('تنصيب')) badgeColor = "bg-blue-50 text-blue-700 border-blue-100";
+                        else if (typeName.includes('إرجاع')) badgeColor = "bg-amber-50 text-amber-700 border-amber-100";
+                        else if (typeName.includes('تجديد') && typeName.includes('FIBER')) badgeColor = "bg-emerald-50 text-emerald-700 border-emerald-100";
+                        else if (typeName.includes('تجديد الشهر الثاني')) badgeColor = "bg-purple-50 text-purple-700 border-purple-100";
+
+                        typesHTML += `
+                            <div class="flex justify-between items-center py-2 border-b border-slate-50 last:border-0 gap-2 font-sans">
+                                <span class="text-xs font-bold text-slate-600 leading-normal font-sans">${typeName}</span>
+                                <span class="text-[10px] font-black px-2 py-0.5 rounded-full border ${badgeColor}">${count}</span>
+                            </div>
+                        `;
+                    });
+
+                    subGroupsHTML += `
+                        <div class="border border-slate-150 rounded-xl p-4 hover:shadow-md hover:border-slate-300 transition-all bg-slate-50/20 flex flex-col h-full">
+                            <div class="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100">
+                                <i data-lucide="${subIcon}" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+                                <h4 class="font-bold text-slate-700 text-xs truncate" title="${subName}">${subName}</h4>
+                                <span class="mr-auto text-xs font-black bg-white border border-slate-200 text-slate-700 px-2.5 py-0.5 rounded-lg shadow-sm font-sans">${subData.totalOperations}</span>
+                            </div>
+                            <div class="space-y-1 flex-1 font-sans">
+                                ${typesHTML}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                subGroupsHTML += `</div>`;
+                contentWrapper.innerHTML = subGroupsHTML;
+
+                card.appendChild(header);
+                card.appendChild(contentWrapper);
+                resultsContainer.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        function toggleAccordion(id, headerElement) {
+            const content = document.getElementById(id);
+            const icon = document.getElementById(`icon-${id}`);
+            
+            if (content.classList.contains('open')) {
+                content.classList.remove('open');
+                icon.style.transform = "rotate(0deg)";
+            } else {
+                content.classList.add('open');
+                icon.style.transform = "rotate(180deg)";
+            }
+        }
+
+        // فتح وإغلاق صندوق التصدير الذكي وتجهيزه
+        function openExportModal() {
+            if (!globalFlatData || globalFlatData.length === 0) {
+                const warningBanner = document.createElement('div');
+                warningBanner.className = "bg-rose-50 text-rose-700 p-4 rounded-xl border border-rose-100 fixed bottom-5 left-5 z-50 flex items-center gap-2 font-bold shadow-lg animate-bounce";
+                warningBanner.innerHTML = `<i data-lucide="alert-circle" class="w-5 h-5"></i><span>الرجاء تحميل ملف الـ CSV وتدقيقه أولاً قبل محاولة التصدير.</span>`;
+                document.body.appendChild(warningBanner);
+                lucide.createIcons();
+                setTimeout(() => warningBanner.remove(), 4000);
+                return;
+            }
+
+            const activeGovs = [...new Set(globalFlatData.map(r => r.governorate))].sort();
+            
+            govExportSelector.innerHTML = '';
+            activeGovs.forEach(gov => {
+                const opt = document.createElement('option');
+                opt.value = gov;
+                opt.textContent = gov;
+                govExportSelector.appendChild(opt);
+            });
+
+            exportModal.classList.remove('hidden');
+            setTimeout(() => {
+                exportModal.firstElementChild.classList.remove('scale-95');
+                exportModal.firstElementChild.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeExportModal() {
+            exportModal.firstElementChild.classList.remove('scale-100');
+            exportModal.firstElementChild.classList.add('scale-95');
+            setTimeout(() => {
+                exportModal.classList.add('hidden');
+            }, 150);
+        }
+
+        // إطلاق عملية تصدير تقرير المحافظة المحددة (مقسمة لورقة ملخص مجمع + ورقة تفصيلية لكل وكيل)
+        function triggerGovernorateExport() {
+            const selectedGov = govExportSelector.value;
+            if (!selectedGov) return;
+
+            closeExportModal();
+
+            // فلترة البيانات المسطحة للمحافظة المختارة فقط
+            const govRows = globalFlatData.filter(row => row.governorate === selectedGov);
+            if (govRows.length === 0) return;
+
+            const wb = XLSX.utils.book_new();
+
+            // 1. بناء "الورقة الرئيسية" (الملخص العام المجمع) لكل وكيل بالمحافظة المختارة
+            const contractorSummaries = {};
+            govRows.forEach(row => {
+                if (!contractorSummaries[row.contractor]) {
+                    contractorSummaries[row.contractor] = {
+                        totalOps: 0,
+                        totalVal: 0
+                    };
+                }
+                contractorSummaries[row.contractor].totalOps += row.count;
+                contractorSummaries[row.contractor].totalVal += row.totalValue;
+            });
+
+            const summarySheetData = [
+                ['الوكيل المستهدف', 'إجمالي العمليات المعتمدة والمصنفة', 'القيمة المالية الإجمالية (د.ع)']
+            ];
+
+            let overallGovOps = 0;
+            let overallGovVal = 0;
+            for (const [contractor, stats] of Object.entries(contractorSummaries).sort()) {
+                summarySheetData.push([contractor, stats.totalOps, stats.totalVal]);
+                overallGovOps += stats.totalOps;
+                overallGovVal += stats.totalVal;
+            }
+            summarySheetData.push(['الإجمالي الكلي للمحافظة', overallGovOps, overallGovVal]);
+
+            const wsSummary = XLSX.utils.aoa_to_sheet(summarySheetData);
+            wsSummary['!dir'] = 'rtl';
+            XLSX.utils.book_append_sheet(wb, wsSummary, 'الملخص العام');
+
+            // 2. بناء الأوراق التفصيلية المنفصلة (ورقة مخصصة لكل وكيل بالمحافظة)
+            const uniqueContractors = [...new Set(govRows.map(r => r.contractor))].sort();
+
+            uniqueContractors.forEach(contractor => {
+                const cRows = govRows.filter(r => r.contractor === contractor);
+                
+                const contractorSheetData = [
+                    ['اسم الزون التفصيلي', 'باقة الاشتراك', 'العملية المنجزة', 'العدد', 'القيمة المالية الإجمالية (د.ع)']
+                ];
+
+                let cTotalOps = 0;
+                let cTotalVal = 0;
+                cRows.forEach(r => {
+                    contractorSheetData.push([r.zone, r.subscription, r.opType, r.count, r.totalValue]);
+                    cTotalOps += r.count;
+                    cTotalVal += r.totalValue;
+                });
+                contractorSheetData.push(['المجموع الكلي للوكيل', '', '', cTotalOps, cTotalVal]);
+
+                const wsContractor = XLSX.utils.aoa_to_sheet(contractorSheetData);
+                wsContractor['!dir'] = 'rtl';
+
+                let cleanSheetName = contractor.replace(/[\/\\*?[\]:]/g, '').substring(0, 31);
+                if (!cleanSheetName) cleanSheetName = 'وكيل غير مسمى';
+
+                XLSX.utils.book_append_sheet(wb, wsContractor, cleanSheetName);
+            });
+
+            const dateStr = new Date().toISOString().split('T')[0];
+            const safeGovName = selectedGov.replace(/[\/\\*?[\]:]/g, '_').split(' ')[0];
+            XLSX.writeFile(wb, `تقرير_تدقيق_${safeGovName}_${dateStr}.xlsx`);
+        }
+
+        // ميزة جديدة لتصدير البيانات بالكامل بملف Excel واحد منسق يحتوي على جميع العمليات والاشتراكات لجميع المحافظات
+        function triggerCompleteExport() {
+            if (!globalFlatData || globalFlatData.length === 0) {
+                const warningBanner = document.createElement('div');
+                warningBanner.className = "bg-rose-50 text-rose-700 p-4 rounded-xl border border-rose-100 fixed bottom-5 left-5 z-50 flex items-center gap-2 font-bold shadow-lg animate-bounce";
+                warningBanner.innerHTML = `<i data-lucide="alert-circle" class="w-5 h-5"></i><span>الرجاء تحميل ملف الـ CSV وتدقيقه أولاً قبل محاولة التصدير.</span>`;
+                document.body.appendChild(warningBanner);
+                lucide.createIcons();
+                setTimeout(() => warningBanner.remove(), 4000);
+                return;
+            }
+
+            const wb = XLSX.utils.book_new();
+
+            // 1. ورقة "الملخص المالي الشامل" لجميع المحافظات والوكلاء
+            const globalContractorSummaries = {};
+            globalFlatData.forEach(row => {
+                if(!globalContractorSummaries[row.contractor]) {
+                    globalContractorSummaries[row.contractor] = {
+                        governorate: row.governorate,
+                        totalOps: 0,
+                        totalVal: 0
+                    };
+                }
+                globalContractorSummaries[row.contractor].totalOps += row.count;
+                globalContractorSummaries[row.contractor].totalVal += row.totalValue;
+            });
+
+            const globalSummaryData = [
+                ['المحافظة', 'اسم الوكيل', 'إجمالي العمليات المعتمدة', 'القيمة المالية الكلية (د.ع)']
+            ];
+
+            let overallOpsSum = 0;
+            let overallValSum = 0;
+            for(const [contractor, stats] of Object.entries(globalContractorSummaries).sort((a,b) => a[1].governorate.localeCompare(b[1].governorate))) {
+                globalSummaryData.push([stats.governorate, contractor, stats.totalOps, stats.totalVal]);
+                overallOpsSum += stats.totalOps;
+                overallValSum += stats.totalVal;
+            }
+            globalSummaryData.push(['الإجمالي الكلي لجميع المحافظات', '', overallOpsSum, overallValSum]);
+
+            const wsGlobalSummary = XLSX.utils.aoa_to_sheet(globalSummaryData);
+            wsGlobalSummary['!dir'] = 'rtl';
+            XLSX.utils.book_append_sheet(wb, wsGlobalSummary, 'الملخص العام الشامل');
+
+            // 2. ورقة "توزيع الاشتراكات والوكلاء"
+            const subMatrixData = [
+                ['اسم الوكيل', 'المحافظة', 'FIBER 35 (عدد)', 'FIBER 35 (قيمة)', 'FIBER 50 (عدد)', 'FIBER 50 (قيمة)', 'FIBER 75 (عدد)', 'FIBER 75 (قيمة)', 'FIBER 150 (عدد)', 'FIBER 150 (قيمة)', 'مجموع الحركات الكلي', 'مجموع المبالغ الكلي (د.ع)']
+            ];
+
+            // بناء مصفوفة سريعة للاشتراكات للوكلاء
+            const matrixAgg = {};
+            globalFlatData.forEach(row => {
+                if(!matrixAgg[row.contractor]) {
+                    matrixAgg[row.contractor] = {
+                        gov: row.governorate,
+                        'FIBER 35': { count: 0, val: 0 },
+                        'FIBER 50': { count: 0, val: 0 },
+                        'FIBER 75': { count: 0, val: 0 },
+                        'FIBER 150': { count: 0, val: 0 }
+                    };
+                }
+                if(matrixAgg[row.contractor][row.subscription]) {
+                    matrixAgg[row.contractor][row.subscription].count += row.count;
+                    matrixAgg[row.contractor][row.subscription].val += row.totalValue;
+                }
+            });
+
+            for(const [contractor, stats] of Object.entries(matrixAgg).sort()) {
+                const f35C = stats['FIBER 35'].count;
+                const f35V = stats['FIBER 35'].val;
+                const f50C = stats['FIBER 50'].count;
+                const f50V = stats['FIBER 50'].val;
+                const f75C = stats['FIBER 75'].count;
+                const f75V = stats['FIBER 75'].val;
+                const f150C = stats['FIBER 150'].count;
+                const f150V = stats['FIBER 150'].val;
+
+                const totalOps = f35C + f50C + f75C + f150C;
+                const totalVal = f35V + f50V + f75V + f150V;
+
+                subMatrixData.push([
+                    contractor, stats.gov, 
+                    f35C, f35V, 
+                    f50C, f50V, 
+                    f75C, f75V, 
+                    f150C, f150V, 
+                    totalOps, totalVal
+                ]);
+            }
+
+            const wsMatrix = XLSX.utils.aoa_to_sheet(subMatrixData);
+            wsMatrix['!dir'] = 'rtl';
+            XLSX.utils.book_append_sheet(wb, wsMatrix, 'مصفوفة توزيع الاشتراكات');
+
+            // 3. ورقة "جميع العمليات المفلترة بالتفصيل"
+            const flatLogData = [
+                ['المحافظة', 'اسم الوكيل', 'كود الزون الأصلي', 'نوع الاشتراك الموحد', 'العملية التفصيلية', 'العدد', 'سعر الحركة الفردي', 'إجمالي المبالغ (د.ع)']
+            ];
+
+            globalFlatData.forEach(row => {
+                flatLogData.push([
+                    row.governorate, row.contractor, row.zone, row.subscription, row.opType, row.count, row.individualValue, row.totalValue
+                ]);
+            });
+
+            const wsFlatLog = XLSX.utils.aoa_to_sheet(flatLogData);
+            wsFlatLog['!dir'] = 'rtl';
+            XLSX.utils.book_append_sheet(wb, wsFlatLog, 'سجل العمليات المدققة كاملاً');
+
+            // حفظ الملف الكامل
+            const dateStr = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, `بيانات_تدقيق_الاشتراكات_كاملة_${dateStr}.xlsx`);
+        }
+    </script>
+</body>
+</html>
