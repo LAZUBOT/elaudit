@@ -281,7 +281,7 @@
                     </h4>
                     <ul class="text-[10px] md:text-[11px] text-slate-500 space-y-1.5 list-disc list-inside font-semibold leading-relaxed">
                         <li><strong>ورقة الملخص العام:</strong> تحتوي على جدول مجمع وموحد لكافة الوكلاء في المحافظة المختارة مع إجمالي عملياتهم وقيمتهم المالية.</li>
-                        <li><strong>أوراق الوكلاء الفردية:</strong> سيتم إنشاء ورقة (Sheet) مستقلة لكل وكيل تحتوي على حركاته بالتفصيل الكامل والزونات المستهدفة.</li>
+                        <li><strong>أوراق التبويب الفردية:</strong> سيتم إنشاء أوراق مخصصة لكل وكيل (أو لكل قضاء تفصيلي في حال تم اختيار محافظة صلاح الدين).</li>
                     </ul>
                 </div>
             </div>
@@ -347,6 +347,54 @@
             'تجديد اشتراك FIBER 75': 65000,
             'تجديد اشتراك FIBER 150': 100000
         };
+
+        // مصفوفة الأقضية الخاصة بمحافظة صلاح الدين لتصنيف الزونات جغرافياً بدقة
+        const SALADIN_GOV_ZONES = [
+            { nameAr: 'تكريت', nameEn: 'TIKRIT', ranges: [[1, 44], [98, 99], [7000, 7300]], specials: [103] },
+            { nameAr: 'سامراء', nameEn: 'SAMARRA', ranges: [[45, 97], [100, 102], [253, 256]], specials: [] },
+            { nameAr: 'العلم', nameEn: 'ALAM', ranges: [[238, 252]], specials: [] },
+            { nameAr: 'الدجيل', nameEn: 'DUJAIL', ranges: [[192, 207]], specials: [] },
+            { nameAr: 'الضلوعية', nameEn: 'DHULUIYA', ranges: [[257, 272]], specials: [] },
+            { nameAr: 'طوز خورماتو', nameEn: 'TUZ', ranges: [[128, 162], [216]], specials: [348] },
+            { nameAr: 'الدور', nameEn: 'DOOR', ranges: [[208, 215]], specials: [] },
+            { nameAr: 'سليمان بيك', nameEn: 'SULAIMAN BEK', ranges: [[278, 282]], specials: [] },
+            { nameAr: 'بيجي', nameEn: 'BAIJI', ranges: [[163, 191]], specials: [312] },
+            { nameAr: 'الشرقاط', nameEn: 'SHIRQAT', ranges: [[217, 237]], specials: [] },
+            { nameAr: 'الصينية', nameEn: 'SINIYA', ranges: [[288, 294]], specials: [] },
+            { nameAr: 'بلد', nameEn: 'BALAD', ranges: [[104, 127], [332, 343]], specials: [] },
+            { nameAr: 'آمرلي', nameEn: 'AMERLI', ranges: [[283, 287]], specials: [] },
+            { nameAr: 'الاسحاقي', nameEn: 'ISHAQI', ranges: [[313, 314]], specials: [] },
+            { nameAr: 'الحجاج', nameEn: 'HAJJAJ', ranges: [[304, 311]], specials: [315] },
+            { nameAr: 'الزاوية', nameEn: 'ZAWIYA', ranges: [[273, 277]], specials: [] },
+            { nameAr: 'سديرة', nameEn: 'SADIRA', ranges: [[322, 331]], specials: [346] },
+            { nameAr: 'ينكجة', nameEn: 'YANKAJA', ranges: [[296, 297]], specials: [] },
+            { nameAr: 'الشكرا', nameEn: 'SHUKRA', ranges: [[316, 321]], specials: [] },
+            { nameAr: 'الحجل', nameEn: 'HIJAL', ranges: [[298, 303]], specials: [344, 345] }
+        ];
+
+        // دالة مطابقة الزونات الخاصة بصلاح الدين لتحديد القضاء التابع لها
+        function getSaladinDistrict(zoneStr) {
+            if (!zoneStr) return 'غير محدد';
+            const cleanZone = zoneStr.trim().toUpperCase();
+            
+            // استخراج الأرقام من كود الزون
+            const match = cleanZone.match(/\d+/);
+            if (!match) return 'غير محدد';
+            
+            const zoneNum = parseInt(match[0], 10);
+
+            for (const dist of SALADIN_GOV_ZONES) {
+                if (dist.specials.includes(zoneNum)) {
+                    return dist.nameAr;
+                }
+                for (const range of dist.ranges) {
+                    if (zoneNum >= range[0] && zoneNum <= range[1]) {
+                        return dist.nameAr;
+                    }
+                }
+            }
+            return 'غير محدد';
+        }
 
         // تحديد مسمى باقة الاشتراك والتوحيد تحت مظلة باقة FIBER 35 للمبالغ المذكورة
         const getSubscription = (op) => {
@@ -467,7 +515,6 @@
                 header: true,
                 skipEmptyLines: true,
                 complete: function(results) {
-                    // Check for general parsing errors
                     if (results.errors && results.errors.length > 0) {
                         console.warn("إشعارات معالجة الملف:", results.errors);
                     }
@@ -481,7 +528,6 @@
         });
 
         function showError(msg) {
-            // Using textContent to prevent XSS injected into the error element dynamically
             errorText.textContent = msg;
             errorMessage.classList.remove('hidden');
             emptyState.classList.remove('hidden');
@@ -500,7 +546,6 @@
             
             const CONTRACTOR_COL = getCol(['contractor', 'dealer', 'وكيل', 'الوكيل']) || 'Contractor';
             const ZONE_COL = getCol(['zone', 'region', 'منطقة', 'المنطقة']) || 'Zone';
-            const DISCOUNT_TYPE_COL = getCol(['discount type', 'discount_type', 'نوع الخصم', 'الخصم']) || 'Discount Type';
             const AMOUNT_COL = getCol(['amount', 'price', 'مبلغ', 'القيمة']) || 'Amount';
 
             if (!getCol(['contractor', 'dealer', 'وكيل', 'الوكيل']) || !getCol(['amount', 'price', 'مبلغ', 'القيمة'])) {
@@ -535,7 +580,6 @@
                 if (!isValidZone) return; // استبعاد المناطق والزونات غير المشمولة
 
                 const zone = rawZone;
-                const discountType = row[DISCOUNT_TYPE_COL] ? row[DISCOUNT_TYPE_COL].trim().toUpperCase() : '';
                 const rawAmount = row[AMOUNT_COL] ? row[AMOUNT_COL].toString() : '0';
                 const cleanAmountString = rawAmount.replace(/,/g, '').replace(/\s/g, '');
                 const amount = Math.floor(parseFloat(cleanAmountString) || 0);
@@ -543,40 +587,34 @@
                 let operationType = null;
                 let subscriptionType = 'غير محدد';
 
-                const isNAOrBlank = discountType === 'NA' || discountType === 'N/A' || discountType === '#N/A' || discountType === 'NULL' || discountType === '' || discountType === '0';
-
-                // قواعد الفرز الذكية للعمولات والمطابقة الحسابية
-                if (discountType.includes('FLAT')) {
-                    if (amount === 15000) {
-                        operationType = 'تنصيب اشتراك جديد (أول شهر)';
-                        subscriptionType = 'FIBER 35';
-                    } else if (amount === 25000) {
-                        operationType = 'تجديد الشهر الثاني من الاشتراك الجديد';
-                        subscriptionType = 'FIBER 35';
-                    } else if (amount === 29000) {
-                        operationType = 'إرجاع للخدمة (شهر واحد)';
-                        subscriptionType = 'FIBER 35';
-                    } else if (amount === 49000) {
-                        operationType = 'إرجاع للخدمة (شهرين)';
-                        subscriptionType = 'FIBER 35';
-                    } else if (amount === 59000) {
-                        operationType = 'إرجاع للخدمة (3 أشهر)';
-                        subscriptionType = 'FIBER 35';
-                    }
-                } else if (isNAOrBlank) {
-                    if (amount === 35000) {
-                        operationType = 'تجديد اشتراك FIBER 35';
-                        subscriptionType = 'FIBER 35';
-                    } else if (amount === 45000) {
-                        operationType = 'تجديد اشتراك FIBER 50';
-                        subscriptionType = 'FIBER 50';
-                    } else if (amount === 65000) {
-                        operationType = 'تجديد اشتراك FIBER 75';
-                        subscriptionType = 'FIBER 75';
-                    } else if (amount === 100000) {
-                        operationType = 'تجديد اشتراك FIBER 150';
-                        subscriptionType = 'FIBER 150';
-                    }
+                // نظام المطابقة المرن المعتمد على أسعار الباقات لتفادي أي قيود حركية
+                if (amount === 15000) {
+                    operationType = 'تنصيب اشتراك جديد (أول شهر)';
+                    subscriptionType = 'FIBER 35';
+                } else if (amount === 25000) {
+                    operationType = 'تجديد الشهر الثاني من الاشتراك الجديد';
+                    subscriptionType = 'FIBER 35';
+                } else if (amount === 29000) {
+                    operationType = 'إرجاع للخدمة (شهر واحد)';
+                    subscriptionType = 'FIBER 35';
+                } else if (amount === 49000) {
+                    operationType = 'إرجاع للخدمة (شهرين)';
+                    subscriptionType = 'FIBER 35';
+                } else if (amount === 59000) {
+                    operationType = 'إرجاع للخدمة (3 أشهر)';
+                    subscriptionType = 'FIBER 35';
+                } else if (amount === 35000) {
+                    operationType = 'تجديد اشتراك FIBER 35';
+                    subscriptionType = 'FIBER 35';
+                } else if (amount === 45000) {
+                    operationType = 'تجديد اشتراك FIBER 50';
+                    subscriptionType = 'FIBER 50';
+                } else if (amount === 65000) {
+                    operationType = 'تجديد اشتراك FIBER 75';
+                    subscriptionType = 'FIBER 75';
+                } else if (amount === 100000) {
+                    operationType = 'تجديد اشتراك FIBER 150';
+                    subscriptionType = 'FIBER 150';
                 }
 
                 if (!operationType) return; // تخطي الحركات غير المطابقة للشروط
@@ -610,7 +648,7 @@
 
             globalData = { byContractor, bySubscription, byZone };
 
-            // بناء جدول البيانات المسطح بقيم نظيفة غير معالجة بـ HTML (للأمان وللتصدير السليم للـ Excel)
+            // بناء جدول البيانات المسطح بقيم نظيفة غير معالجة بـ HTML
             globalFlatData = [];
             for (const [contractor, cData] of Object.entries(byContractor)) {
                 for (const [zone, zData] of Object.entries(cData.subGroups)) {
@@ -686,7 +724,6 @@
                 renderDetailedProfile(selectedContractorName);
             }
 
-            // Mobile view scroll assistance
             activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
 
@@ -715,7 +752,7 @@
                     <thead class="text-[10px] md:text-xs text-slate-700 bg-slate-50">
                         <tr>
                             <th scope="col" class="px-3 md:px-6 py-3.5 font-black">المحافظة</th>
-                            <th scope="col" class="px-3 md:px-6 py-3.5 font-black">اسم الزون الأصلي</th>
+                            <th scope="col" class="px-3 md:px-6 py-3.5 font-black">اسم الزون الأصلي (القضاء)</th>
                             <th scope="col" class="px-3 md:px-6 py-3.5 font-black">الوكيل</th>
                             <th scope="col" class="px-3 md:px-6 py-3.5 font-black">نوع الاشتراك الموحد</th>
                             <th scope="col" class="px-3 md:px-6 py-3.5 font-black">العملية المنجزة</th>
@@ -733,10 +770,17 @@
                 else if (row.opType.includes('تجديد') && row.opType.includes('FIBER')) badgeColor = "bg-emerald-50 text-emerald-700 border-emerald-100";
                 else if (row.opType.includes('تجديد الشهر الثاني')) badgeColor = "bg-purple-50 text-purple-700 border-purple-100";
 
+                // استنباط القضاء تفصيلياً لزونات صلاح الدين داخل الجدول المكتوب
+                let displayZone = escapeHTML(row.zone);
+                if (row.zone.includes('FTK')) {
+                    const district = getSaladinDistrict(row.zone);
+                    displayZone = `${escapeHTML(row.zone)} (<span class="text-indigo-600 font-black">قضاء ${escapeHTML(district)}</span>)`;
+                }
+
                 tableHTML += `
                     <tr class="hover:bg-slate-50/50 transition-colors">
                         <td class="px-3 md:px-6 py-3 md:py-4 font-bold text-slate-700 whitespace-nowrap">${escapeHTML(row.governorate)}</td>
-                        <td class="px-3 md:px-6 py-3 md:py-4 font-bold text-emerald-700 whitespace-nowrap">${escapeHTML(row.zone)}</td>
+                        <td class="px-3 md:px-6 py-3 md:py-4 font-bold text-emerald-700 whitespace-nowrap">${displayZone}</td>
                         <td class="px-3 md:px-6 py-3 md:py-4 font-bold text-slate-900">${escapeHTML(row.contractor)}</td>
                         <td class="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
                             <span class="px-2 py-0.5 bg-slate-50 border border-slate-200 rounded text-[10px] font-bold text-slate-700">
@@ -767,7 +811,6 @@
             
             if(!globalData) return;
 
-            // تجميع وتفكيك الحركات لكل وكيل حسب الباقة
             const contractorSubs = {};
 
             globalFlatData.forEach(row => {
@@ -1039,10 +1082,17 @@
                 else if (row.opType.includes('تجديد') && row.opType.includes('FIBER')) badgeColor = "bg-emerald-50 text-emerald-700 border-emerald-100";
                 else if (row.opType.includes('تجديد الشهر الثاني')) badgeColor = "bg-purple-50 text-purple-700 border-purple-100";
 
+                // تصنيف الزونات إلى أقضية في الملف التفصيلي
+                let zoneDisplay = escapeHTML(row.zone);
+                if (row.zone.includes('FTK')) {
+                    const distName = getSaladinDistrict(row.zone);
+                    zoneDisplay = `${escapeHTML(row.zone)} (${escapeHTML(distName)})`;
+                }
+
                 tableRowsHTML += `
                     <tr class="hover:bg-slate-50/50 transition-colors font-sans text-xs">
                         <td class="px-3 py-2.5 font-bold text-slate-700 whitespace-nowrap">${escapeHTML(row.governorate)}</td>
-                        <td class="px-3 py-2.5 font-semibold text-emerald-700 whitespace-nowrap">${escapeHTML(row.zone)}</td>
+                        <td class="px-3 py-2.5 font-semibold text-emerald-700 whitespace-nowrap">${zoneDisplay}</td>
                         <td class="px-3 py-2.5 whitespace-nowrap"><span class="px-1.5 py-0.5 bg-slate-50 border border-slate-200 text-slate-700 font-bold text-[10px] rounded">${escapeHTML(row.subscription)}</span></td>
                         <td class="px-3 py-2.5 whitespace-nowrap"><span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${badgeColor}">${escapeHTML(row.opType)}</span></td>
                         <td class="px-3 py-2.5 font-bold text-slate-500 text-left whitespace-nowrap">${row.individualValue.toLocaleString('en-US')} د.ع</td>
@@ -1063,7 +1113,7 @@
                                 <thead class="text-[10px] md:text-xs text-slate-700 bg-slate-50/40">
                                     <tr>
                                         <th scope="col" class="px-3 py-2.5 font-black">المحافظة</th>
-                                        <th scope="col" class="px-3 py-2.5 font-black">كود الزون الأصلي</th>
+                                        <th scope="col" class="px-3 py-2.5 font-black">كود الزون الأصلي (القضاء)</th>
                                         <th scope="col" class="px-3 py-2.5 font-black">الاشتراك المعتمد</th>
                                         <th scope="col" class="px-3 py-2.5 font-black">العملية المنجزة</th>
                                         <th scope="col" class="px-3 py-2.5 font-black text-left">سعر الحركة</th>
@@ -1124,7 +1174,6 @@
                 const card = document.createElement('div');
                 card.className = "bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden";
                 
-                // Event Delegation & Custom Data Attributes used to avoid dynamically bound inline closures and mitigate memory leaks
                 const header = document.createElement('div');
                 header.className = "p-4 md:p-5 bg-slate-50/70 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-colors gap-3";
                 header.setAttribute('data-accordion-trigger', itemId);
@@ -1171,11 +1220,18 @@
                         `;
                     });
 
+                    // تبيين القضاء جغرافياً في واجهة الكروت
+                    let resolvedSubName = escapeHTML(subName);
+                    if (subName.includes('FTK')) {
+                        const district = getSaladinDistrict(subName);
+                        resolvedSubName = `${escapeHTML(subName)} (<span class="text-indigo-600 font-bold">${escapeHTML(district)}</span>)`;
+                    }
+
                     subGroupsHTML += `
                         <div class="border border-slate-150 rounded-xl p-3 md:p-4 hover:shadow-md hover:border-slate-300 transition-all bg-slate-50/20 flex flex-col h-full">
                             <div class="flex items-center gap-2 mb-2 pb-1.5 border-b border-slate-100">
                                 <i data-lucide="${subIcon}" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></i>
-                                <h4 class="font-bold text-slate-700 text-[11px] md:text-xs truncate" title="${escapeHTML(subName)}">${escapeHTML(subName)}</h4>
+                                <h4 class="font-bold text-slate-700 text-[11px] md:text-xs truncate" title="${escapeHTML(subName)}">${resolvedSubName}</h4>
                                 <span class="mr-auto text-[10px] font-black bg-white border border-slate-200 text-slate-700 px-2 py-0.5 rounded-lg shadow-sm">${subData.totalOperations}</span>
                             </div>
                             <div class="space-y-1 flex-1">
@@ -1255,20 +1311,20 @@
             }, 150);
         }
 
-        // إطلاق عملية تصدير تقرير المحافظة المحددة (مقسمة لورقة ملخص مجمع + ورقة تفصيلية لكل وكيل)
+        // إطلاق عملية تصدير تقرير المحافظة المحددة (صلاح الدين تقسم لأقضية، وباقي المحافظات تقسم لوكلاء)
         function triggerGovernorateExport() {
             const selectedGov = govExportSelector.value;
             if (!selectedGov) return;
 
             closeExportModal();
 
-            // فلترة البيانات المسطحة للمحافظة المختارة فقط (استخدام البيانات غير المصنفة بـ HTML للأمان وسلامة الإكسل)
+            // فلترة البيانات المسطحة للمحافظة المختارة فقط
             const govRows = globalFlatData.filter(row => row.governorate === selectedGov);
             if (govRows.length === 0) return;
 
             const wb = XLSX.utils.book_new();
 
-            // 1. بناء "الورقة الرئيسية" (الملخص العام المجمع) لكل وكيل بالمحافظة المختارة
+            // 1. بناء "الورقة الرئيسية" (الملخص العام المجمع للمحافظة)
             const contractorSummaries = {};
             govRows.forEach(row => {
                 if (!contractorSummaries[row.contractor]) {
@@ -1292,46 +1348,86 @@
                 overallGovOps += stats.totalOps;
                 overallGovVal += stats.totalVal;
             }
-            summarySheetData.push(['الخلاصة الإجمالية للمحافظة', overallGovOps, overallGovVal]);
+            summarySheetData.push(['الإجمالي الكلي للمحافظة', overallGovOps, overallGovVal]);
 
             const wsSummary = XLSX.utils.aoa_to_sheet(summarySheetData);
             wsSummary['!dir'] = 'rtl';
             XLSX.utils.book_append_sheet(wb, wsSummary, 'الملخص العام');
 
-            // 2. بناء الأوراق التفصيلية المنفصلة (ورقة مخصصة لكل وكيل بالمحافظة)
-            const uniqueContractors = [...new Set(govRows.map(r => r.contractor))].sort();
+            // التحقق مما إذا كانت المحافظة المختارة هي صلاح الدين لتبويبها حسب الأقضية
+            const isSaladin = selectedGov.includes('FTK');
 
-            uniqueContractors.forEach(contractor => {
-                const cRows = govRows.filter(r => r.contractor === contractor);
-                
-                const contractorSheetData = [
-                    ['اسم الزون التفصيلي', 'باقة الاشتراك', 'العملية المنجزة', 'العدد', 'القيمة المالية الإجمالية (د.ع)']
-                ];
-
-                let cTotalOps = 0;
-                let cTotalVal = 0;
-                cRows.forEach(r => {
-                    contractorSheetData.push([r.zone, r.subscription, r.opType, r.count, r.totalValue]);
-                    cTotalOps += r.count;
-                    cTotalVal += r.totalValue;
+            if (isSaladin) {
+                // تجميع بيانات صلاح الدين حسب القضاء
+                const districtRows = {};
+                govRows.forEach(row => {
+                    const districtName = getSaladinDistrict(row.zone);
+                    if (!districtRows[districtName]) {
+                        districtRows[districtName] = [];
+                    }
+                    districtRows[districtName].push(row);
                 });
-                contractorSheetData.push(['المجموع الكلي للوكيل', '', '', cTotalOps, cTotalVal]);
 
-                const wsContractor = XLSX.utils.aoa_to_sheet(contractorSheetData);
-                wsContractor['!dir'] = 'rtl';
+                // إنشاء ورقة مستقلة لكل قضاء يحتوي على عمليات
+                const sortedDistricts = Object.keys(districtRows).sort();
+                sortedDistricts.forEach(distName => {
+                    const rows = districtRows[distName];
+                    const distSheetData = [
+                        ['الوكيل التفصيلي', 'رمز الزون الأصلي', 'باقة الاشتراك', 'العملية المنجزة', 'العدد المعتمد', 'القيمة المالية الإجمالية (د.ع)']
+                    ];
+                    let distOps = 0;
+                    let distVal = 0;
 
-                let cleanSheetName = contractor.replace(/[\/\\*?[\]:]/g, '').substring(0, 31);
-                if (!cleanSheetName) cleanSheetName = 'وكيل غير مسمى';
+                    // ترتيب أبجدي للوكلاء والزونات داخل ورقة القضاء
+                    rows.sort((a, b) => a.contractor.localeCompare(b.contractor) || a.zone.localeCompare(b.zone));
 
-                XLSX.utils.book_append_sheet(wb, wsContractor, cleanSheetName);
-            });
+                    rows.forEach(r => {
+                        distSheetData.push([r.contractor, r.zone, r.subscription, r.opType, r.count, r.totalValue]);
+                        distOps += r.count;
+                        distVal += r.totalValue;
+                    });
+                    distSheetData.push(['المجموع الكلي للقضاء', '', '', '', distOps, distVal]);
+
+                    const wsDist = XLSX.utils.aoa_to_sheet(distSheetData);
+                    wsDist['!dir'] = 'rtl';
+                    XLSX.utils.book_append_sheet(wb, wsDist, `قضاء ${distName}`);
+                });
+            } else {
+                // بقية المحافظات: إنشاء ورقة منفصلة لكل وكيل بالتفصيل
+                const uniqueContractors = [...new Set(govRows.map(r => r.contractor))].sort();
+
+                uniqueContractors.forEach(contractor => {
+                    const cRows = govRows.filter(r => r.contractor === contractor);
+                    
+                    const contractorSheetData = [
+                        ['اسم الزون التفصيلي', 'باقة الاشتراك', 'العملية المنجزة', 'العدد', 'القيمة المالية الإجمالية (د.ع)']
+                    ];
+
+                    let cTotalOps = 0;
+                    let cTotalVal = 0;
+                    cRows.forEach(r => {
+                        contractorSheetData.push([r.zone, r.subscription, r.opType, r.count, r.totalValue]);
+                        cTotalOps += r.count;
+                        cTotalVal += r.totalValue;
+                    });
+                    contractorSheetData.push(['المجموع الكلي للوكيل', '', '', cTotalOps, cTotalVal]);
+
+                    const wsContractor = XLSX.utils.aoa_to_sheet(contractorSheetData);
+                    wsContractor['!dir'] = 'rtl';
+
+                    let cleanSheetName = contractor.replace(/[\/\\*?[\]:]/g, '').substring(0, 31);
+                    if (!cleanSheetName) cleanSheetName = 'وكيل غير مسمى';
+
+                    XLSX.utils.book_append_sheet(wb, wsContractor, cleanSheetName);
+                });
+            }
 
             const dateStr = new Date().toISOString().split('T')[0];
             const safeGovName = selectedGov.replace(/[\/\\*?[\]:]/g, '_').split(' ')[0];
             XLSX.writeFile(wb, `تقرير_تدقيق_${safeGovName}_${dateStr}.xlsx`);
         }
 
-        // ميزة جديدة لتصدير البيانات بالكامل بملف Excel واحد منسق يحتوي على جميع العمليات والاشتراكات لجميع المحافظات
+        // ميزة لتصدير البيانات بالكامل بملف Excel واحد منسق يحتوي على جميع العمليات والاشتراكات لجميع المحافظات
         function triggerCompleteExport() {
             if (!globalFlatData || globalFlatData.length === 0) {
                 const warningBanner = document.createElement('div');
@@ -1381,7 +1477,6 @@
                 ['اسم الوكيل', 'المحافظة', 'FIBER 35 (عدد)', 'FIBER 35 (قيمة)', 'FIBER 50 (عدد)', 'FIBER 50 (قيمة)', 'FIBER 75 (عدد)', 'FIBER 75 (قيمة)', 'FIBER 150 (عدد)', 'FIBER 150 (قيمة)', 'مجموع الحركات الكلي', 'مجموع المبالغ الكلي (د.ع)']
             ];
 
-            // بناء مصفوفة سريعة للاشتراكات للوكلاء
             const matrixAgg = {};
             globalFlatData.forEach(row => {
                 if(!matrixAgg[row.contractor]) {
@@ -1426,14 +1521,15 @@
             wsMatrix['!dir'] = 'rtl';
             XLSX.utils.book_append_sheet(wb, wsMatrix, 'مصفوفة توزيع الاشتراكات');
 
-            // 3. ورقة "جميع العمليات المفلترة بالتفصيل"
+            // 3. ورقة "جميع العمليات المفلترة بالتفصيل" (مع إدراج القضاء جغرافياً لصلاح الدين)
             const flatLogData = [
-                ['المحافظة', 'اسم الوكيل', 'كود الزون الأصلي', 'نوع الاشتراك الموحد', 'العملية التفصيلية', 'العدد', 'سعر الحركة الفردي', 'إجمالي المبالغ (د.ع)']
+                ['المحافظة', 'اسم الوكيل', 'كود الزون الأصلي', 'اسم القضاء (لصلاح الدين)', 'نوع الاشتراك الموحد', 'العملية التفصيلية', 'العدد', 'سعر الحركة الفردي', 'إجمالي المبالغ (د.ع)']
             ];
 
             globalFlatData.forEach(row => {
+                const saladinDistrict = row.zone.includes('FTK') ? getSaladinDistrict(row.zone) : 'غير مشمول';
                 flatLogData.push([
-                    row.governorate, row.contractor, row.zone, row.subscription, row.opType, row.count, row.individualValue, row.totalValue
+                    row.governorate, row.contractor, row.zone, saladinDistrict, row.subscription, row.opType, row.count, row.individualValue, row.totalValue
                 ]);
             });
 
@@ -1443,7 +1539,7 @@
 
             // حفظ الملف الكامل
             const dateStr = new Date().toISOString().split('T')[0];
-            XLSX.writeFile(wb, `بيانات_تدقيق_الاشتراكات_كاملة_${dateStr}.xlsx`);
+            XLSX.writeFile(wb, `قاعدة_بيانات_تدقيق_الاشتراكات_كاملة_${dateStr}.xlsx`);
         }
     </script>
 </body>
